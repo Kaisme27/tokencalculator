@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from 'react';
+import { useRef, useEffect } from "react";
 
 const MODES = [
   {
@@ -282,16 +283,16 @@ function App() {
               )}
               <div style={{ marginTop: 22 }}>
                 <b>Details:</b>
-                {result.pages.map((p, i) => (
+                {Array.isArray(result?.pages) && result.pages.map((p, i) => (
                   <div key={i} style={{ marginTop: 16, padding: 16, border: "1.5px solid #e6f0ff", borderRadius: 10, background: "#fff" }}>
                     <b>Page:</b> <a href={p.url} target="_blank" rel="noopener noreferrer">{p.url}</a><br />
                     <span style={{ color: "#1677ff" }}>Token Range: {p.min_token} ~ {p.max_token}</span>
                     <div style={{ fontSize: 15, color: "#444", marginTop: 6 }}>
-                      Text Token: {p.details.text_token[0]} ~ {p.details.text_token[1]}<br />
-                      Form Token: {p.details.form_token[0]} ~ {p.details.form_token[1]}<br />
-                      Button Token: {p.details.button_token[0]} ~ {p.details.button_token[1]}<br />
-                      Feature Token: {p.details.feature_token[0]} ~ {p.details.feature_token[1]}<br />
-                      Features: {p.details.features && p.details.features.length > 0 ? p.details.features.join(", ") : "None"}
+                      Text Token: {p.details?.text_token ? `${p.details.text_token[0]} ~ ${p.details.text_token[1]}` : "N/A"}<br />
+                      Form Token: {p.details?.form_token ? `${p.details.form_token[0]} ~ ${p.details.form_token[1]}` : "N/A"}<br />
+                      Button Token: {p.details?.button_token ? `${p.details.button_token[0]} ~ ${p.details.button_token[1]}` : "N/A"}<br />
+                      Feature Token: {p.details?.feature_token ? `${p.details.feature_token[0]} ~ ${p.details.feature_token[1]}` : "N/A"}<br />
+                      Features: {p.details?.features && p.details.features.length > 0 ? p.details.features.join(", ") : "None"}
                     </div>
                   </div>
                 ))}
