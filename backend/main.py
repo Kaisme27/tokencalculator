@@ -79,16 +79,38 @@ class AnalyzeResult(BaseModel):
 
 def analyze_url(url: str) -> PageResult:
     try:
-        resp = requests.get(url, timeout=10)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        resp = requests.get(url, timeout=10, headers=headers)
         resp.raise_for_status()
     except Exception as e:
         return PageResult(url=url, min_token=0, max_token=0, details={"error": str(e)})
     soup = BeautifulSoup(resp.text, "html.parser")
+
+    # 抓取所有标签文本内容（包括导航、脚本、样式等标签）
     text = soup.get_text(separator=" ", strip=True)
     enc = tiktoken.get_encoding("cl100k_base")
     text_token = len(enc.encode(text))
+
+    # 调试输出
+    print("==== HTML ====")
+    print(resp.text[:1000])
+    print("==== TEXT ====")
+    print(text)
+    print("==== TEXT TOKEN ====")
+    print(text_token)
+
     form_count = len(soup.find_all('form'))
-    button_count = len(soup.find_all(['button', 'input'], type=lambda x: x=='submit' if x else False))
+    input_count = len(soup.find_all('input'))
+    select_count = len(soup.find_all('select'))
+    textarea_count = len(soup.find_all('textarea'))
+
+    button_count = len(soup.find_all('button'))
+    button_count += len(soup.find_all('input', {'type': 'submit'}))
+    button_count += len(soup.find_all('a', class_=lambda x: x and ('btn' in x or 'button' in x)))
+    button_count += len(soup.find_all('div', class_=lambda x: x and ('btn' in x or 'button' in x)))
+
     lower_html = resp.text.lower()
     features = set()
     for feat, patterns in FEATURE_KEYWORDS.items():
@@ -97,6 +119,7 @@ def analyze_url(url: str) -> PageResult:
                 features.add(feat)
     feature_min = sum(FEATURE_TOKEN_MAP.get(f, (0,0))[0] for f in features)
     feature_max = sum(FEATURE_TOKEN_MAP.get(f, (0,0))[1] for f in features)
+
     form_token_min = form_count * 1200
     form_token_max = form_count * 2000
     button_token_min = button_count * 300
@@ -105,6 +128,7 @@ def analyze_url(url: str) -> PageResult:
     text_token_max = int(text_token * 1.5)
     min_token = text_token_min + form_token_min + button_token_min + feature_min
     max_token = text_token_max + form_token_max + button_token_max + feature_max
+
     return PageResult(
         url=url,
         min_token=min_token,
@@ -116,6 +140,9 @@ def analyze_url(url: str) -> PageResult:
             "feature_token": (feature_min, feature_max),
             "features": list(features),
             "form_count": form_count,
+            "input_count": input_count,
+            "select_count": select_count,
+            "textarea_count": textarea_count,
             "button_count": button_count
         }
     )
