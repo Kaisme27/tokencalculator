@@ -108,7 +108,8 @@ function App() {
       if (mode === "smart") {
         body.other_urls = allUrls.slice(1);
       }
-      const res = await fetch("http://localhost:8000/analyze", {
+      const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:8000";
+      const res = await fetch(`${apiUrl}/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -315,3 +316,4 @@ function App() {
 }
 
 export default App;
+ 
